@@ -34,11 +34,11 @@
             });
 
             let teslaByDayGroup = dateDim.group().reduceSum(function(d){
-                return 100*d.tesla / data[0].tesla;
+                return 100*((d.tesla - data[0].tesla) / data[0].tesla)
             });
 
             let fbByDayGroup = dateDim.group().reduceSum(function(d){
-                return 100*d.facebook / data[0].facebook;
+                return 100*((d.facebook - data[0].facebook) / data[0].facebook)
             });
 
             let xScale = d3.scaleTime()
