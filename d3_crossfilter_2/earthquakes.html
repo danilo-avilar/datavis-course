@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
 
     <title> Earthquake Data</title>
 
@@ -15,14 +17,20 @@
     <script src="js/crossfilter.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="js/dc.min.js"></script>
+    
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
 </head>
 <body>
   <main role="main" class="container">
     <div class='row'>
-	    <div id='magnitude-chart' class="col-6">
-	      <h4> Number of Events by Magnitude </h4>
+		<div id="mapid" class="col-6">
+		</div>
+		<div class = "col-6">
+			<div id='magnitude-chart'>
+			<h4> Number of Events by Magnitude </h4>
 	    </div>
-	    <div id='depth-chart' class="col-6">
+	    <div id='depth-chart'>
 		  <h4> Events by Depth (km) </h4>
 	    </div>   
     </div>
@@ -50,6 +58,10 @@
     let barChartMagnitude = dc.barChart("#magnitude-chart");
     let barChartDepth     = dc.barChart("#depth-chart");
     let lineChart         = dc.lineChart("#time-chart");
+    
+    let map = L.map('mapid').setView([-41.05,172.93], 5);
+	L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors', maxZoom: 17}).addTo(map);
+	
 	// load data from a csv file
 	d3.csv("data/earthquakes.csv").then(function (data) {
 	    // format our data
@@ -62,6 +74,10 @@
             d.magnitude = formatMagnitude(d.magnitude);
             d.depth     = formatDepth(d.depth);
             d.hour      = parseDate2(d.origintime.substr(0,13));
+            d.lat  		= d.latitude;
+            d.long 		= d.longitude;
+            let circle  = L.circle([d.lat, d.long], 4000*d.magnitude, {color: '#fd8d3c', weight: 2, fillColor: '#fecc5c', fillOpacity: 0.5}).addTo(map);
+            circle.bindPopup("Magnitude: " + d.magnitude + "<br> Time: " + d.hour);
         });
     	// Run the data through crossfilter and load our 'facts'
         let facts           = crossfilter(data);
@@ -82,8 +98,7 @@
                   .size(10)
                   .columns(['dtg', 'magnitude', 'depth','latitude','longitude'])
                   .sortBy(function (d) {return d.dtg;})
-                  .order(d3.ascending);
-	
+                  .order(d3.ascending);	
 	  
 	    //Create a group for Magnitude that just counts the number of elements in the group
 	  
